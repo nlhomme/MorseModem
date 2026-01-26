@@ -229,7 +229,13 @@ class MorseDecoder: NSObject, ObservableObject {
     
     /// Decode from audio file
     func decodeFromFile(url: URL) async throws {
+        print("🎵 MorseDecoder: Opening audio file at \(url)")
+        
         let audioFile = try AVAudioFile(forReading: url)
+        print("🎵 MorseDecoder: Audio file opened successfully")
+        print("🎵 Format: \(audioFile.fileFormat)")
+        print("🎵 Length: \(audioFile.length) frames")
+        print("🎵 Duration: \(Double(audioFile.length) / audioFile.fileFormat.sampleRate) seconds")
         
         guard let buffer = AVAudioPCMBuffer(
             pcmFormat: audioFile.processingFormat,
@@ -239,12 +245,18 @@ class MorseDecoder: NSObject, ObservableObject {
         }
         
         try audioFile.read(into: buffer)
+        print("🎵 MorseDecoder: Audio data read into buffer")
         
         guard let channelData = buffer.floatChannelData?[0] else {
             throw NSError(domain: "MorseDecoder", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to read audio data"])
         }
         
         recordedSamples = Array(UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength)))
+        print("🎵 MorseDecoder: Recorded \(recordedSamples.count) samples")
+        
         decodeMorseFromSamples()
+        print("🎵 MorseDecoder: Decoding complete")
+        print("🎵 Decoded morse: \(decodedMorse)")
+        print("🎵 Decoded text: \(decodedText)")
     }
 }

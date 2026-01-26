@@ -13,6 +13,7 @@ struct HistoryView: View {
     @Query(sort: \Message.timestamp, order: .reverse) private var messages: [Message]
     
     @State private var searchText = ""
+    @State private var showClearAllConfirmation = false
     
     private var filteredMessages: [Message] {
         if searchText.isEmpty {
@@ -67,6 +68,27 @@ struct HistoryView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     EditButton()
                 }
+                
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(role: .destructive) {
+                        showClearAllConfirmation = true
+                    } label: {
+                        Label("Clear All", systemImage: "trash")
+                    }
+                    .disabled(messages.isEmpty)
+                }
+            }
+            .confirmationDialog(
+                "Clear All History",
+                isPresented: $showClearAllConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Clear All", role: .destructive) {
+                    clearAllMessages()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Are you sure you want to delete all \(messages.count) message\(messages.count == 1 ? "" : "s")? This action cannot be undone.")
             }
             .overlay {
                 if filteredMessages.isEmpty {
@@ -87,6 +109,19 @@ struct HistoryView: View {
     private func deleteMessages(offsets: IndexSet) {
         for index in offsets {
             modelContext.delete(filteredMessages[index])
+        }
+    }
+    
+    private func clearAllMessages() {
+        for message in messages {
+            modelContext.delete(message)
+        }
+        
+        // Save the context to persist the deletion
+        do {
+            try modelContext.save()
+        } catch {
+            print("Error clearing history: \(error)")
         }
     }
 }

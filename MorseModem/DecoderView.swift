@@ -11,15 +11,31 @@ import UniformTypeIdentifiers
 
 struct DecoderView: View {
     @Environment(\.modelContext) private var modelContext
+    @Binding var sharedAudioURL: URL?
     
     @State private var viewModel: DecoderViewModel?
     @State private var showFilePicker = false
     @State private var showCopiedAlert = false
+    @State private var pendingURL: URL? // Store URL until viewModel is ready
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
+                    // Import Status Indicator
+                    if viewModel?.isImporting == true {
+                        HStack {
+                            ProgressView()
+                            Text("Importing and decoding audio...")
+                                .font(.headline)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(.horizontal)
+                    }
+                    
                     // Recording Controls
                     VStack(spacing: 16) {
                         if viewModel?.morseDecoder.isRecording == true {
@@ -225,6 +241,30 @@ struct DecoderView: View {
         .onAppear {
             if viewModel == nil {
                 viewModel = DecoderViewModel(modelContext: modelContext)
+                
+                // Process any pending URL that arrived before viewModel was ready
+                if let url = pendingURL {
+                    Task {
+                        await viewModel?.importAudioFile(url: url)
+                        pendingURL = nil
+                        sharedAudioURL = nil
+                    }
+                }
+            }
+        }
+        .onChange(of: sharedAudioURL) { oldValue, newValue in
+            if let url = newValue {
+                if let viewModel = viewModel {
+                    // ViewModel is ready, process immediately
+                    Task {
+                        await viewModel.importAudioFile(url: url)
+                        sharedAudioURL = nil
+                    }
+                } else {
+                    // ViewModel not ready yet, store for later
+                    pendingURL = url
+                    sharedAudioURL = nil
+                }
             }
         }
     }
@@ -257,6 +297,7 @@ struct WaveformView: View {
 }
 
 #Preview {
-    DecoderView()
+    @Previewable @State var sharedURL: URL? = nil
+    DecoderView(sharedAudioURL: $sharedURL)
         .modelContainer(for: [Message.self], inMemory: true)
 }
