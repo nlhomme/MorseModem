@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+internal import Combine
 
 @MainActor
 @Observable
@@ -17,31 +18,59 @@ class DecoderViewModel {
     var isImporting = false
     var importError: String?
     var showPermissionAlert = false
+    var recordingDuration: TimeInterval = 0
+    var isRecording: Bool = false
+    var waveformData: [Float] = []
     
     let morseDecoder = MorseDecoder()
     
     private var modelContext: ModelContext
+    private var recordingStartTime: Date?
+    private var durationTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         
         // Observe decoder changes
-        Task {
-            await observeDecoder()
-        }
+        observeDecoder()
     }
     
     /// Observe decoder changes
-    private func observeDecoder() async {
-        // Note: In a production app, you might use Combine or async streams
-        // For simplicity, we'll access decoder properties directly in views
+    private func observeDecoder() {
+        // Bridge Combine's @Published to @Observable
+        morseDecoder.$isRecording
+            .sink { [weak self] isRecording in
+                self?.isRecording = isRecording
+            }
+            .store(in: &cancellables)
+        
+        morseDecoder.$waveformData
+            .sink { [weak self] waveformData in
+                self?.waveformData = waveformData
+            }
+            .store(in: &cancellables)
     }
     
     /// Start recording
     func startRecording() async {
+        print("🎤 DecoderViewModel: startRecording called")
         do {
             try await morseDecoder.startRecording()
+            print("🎤 DecoderViewModel: Recording started, isRecording = \(morseDecoder.isRecording)")
+            
+            // Start the duration timer
+            recordingStartTime = Date()
+            recordingDuration = 0
+            let startTime = Date()
+            durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.recordingDuration = Date().timeIntervalSince(startTime)
+                }
+            }
         } catch {
+            print("🎤 DecoderViewModel: Recording failed - \(error.localizedDescription)")
             importError = error.localizedDescription
             showPermissionAlert = true
         }
@@ -49,10 +78,21 @@ class DecoderViewModel {
     
     /// Stop recording
     func stopRecording() {
+        print("🎤 DecoderViewModel: stopRecording called")
         morseDecoder.stopRecording()
+        print("🎤 DecoderViewModel: Recording stopped, isRecording = \(morseDecoder.isRecording)")
+        
+        // Stop the duration timer
+        durationTimer?.invalidate()
+        durationTimer = nil
+        recordingStartTime = nil
+        recordingDuration = 0
         
         decodedText = morseDecoder.decodedText
         decodedMorse = morseDecoder.decodedMorse
+        
+        print("🎤 DecoderViewModel: decodedText = '\(decodedText)'")
+        print("🎤 DecoderViewModel: decodedMorse = '\(decodedMorse)'")
         
         // Save to history
         saveMessage()

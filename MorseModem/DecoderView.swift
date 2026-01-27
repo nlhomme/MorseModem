@@ -38,76 +38,174 @@ struct DecoderView: View {
                     
                     // Recording Controls
                     VStack(spacing: 16) {
-                        if viewModel?.morseDecoder.isRecording == true {
-                            // Recording indicator
-                            HStack {
-                                Circle()
-                                    .fill(Color.red)
-                                    .frame(width: 12, height: 12)
-                                    .scaleEffect(1.2)
-                                    .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: viewModel?.morseDecoder.isRecording)
+                        // Recording Status Banner (Always visible when recording)
+                        if viewModel?.isRecording == true {
+                            VStack(spacing: 16) {
+                                // Prominent Recording Indicator
+                                HStack(spacing: 12) {
+                                    ZStack {
+                                        // Pulsing outer ring
+                                        Circle()
+                                            .stroke(Color.red.opacity(0.3), lineWidth: 4)
+                                            .frame(width: 24, height: 24)
+                                            .scaleEffect(viewModel?.isRecording == true ? 1.5 : 1.0)
+                                            .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: viewModel?.isRecording)
+                                        
+                                        // Inner dot
+                                        Circle()
+                                            .fill(Color.red)
+                                            .frame(width: 16, height: 16)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("RECORDING")
+                                            .font(.headline)
+                                            .fontWeight(.bold)
+                                        
+                                        Text("Speak or play Morse code near your device")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.red.opacity(0.15))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.red.opacity(0.5), lineWidth: 2)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
                                 
-                                Text("Recording...")
-                                    .font(.headline)
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.red.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            
-                            // Waveform visualization
-                            if let waveform = viewModel?.morseDecoder.waveformData, !waveform.isEmpty {
-                                WaveformView(data: waveform)
-                                    .frame(height: 100)
+                                // Waveform visualization
+                                if let waveform = viewModel?.waveformData, !waveform.isEmpty {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Audio Level")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        
+                                        WaveformView(data: waveform)
+                                            .frame(height: 80)
+                                    }
                                     .padding()
                                     .background(Color(.secondarySystemBackground))
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                                } else {
+                                    // Placeholder while waiting for audio
+                                    VStack(spacing: 8) {
+                                        ProgressView()
+                                            .tint(.red)
+                                        Text("Listening for audio...")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .frame(height: 60)
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.secondarySystemBackground))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
                             }
                         }
                         
-                        // Record Button
+                        // Record Button (changes based on state)
                         Button {
+                            print("🎤 Button tapped! Current isRecording: \(viewModel?.isRecording ?? false)")
                             Task {
-                                if viewModel?.morseDecoder.isRecording == true {
+                                if viewModel?.isRecording == true {
+                                    print("🎤 Stopping recording...")
                                     viewModel?.stopRecording()
                                 } else {
+                                    print("🎤 Starting recording...")
                                     await viewModel?.startRecording()
                                 }
                             }
                         } label: {
-                            HStack {
-                                Image(systemName: viewModel?.morseDecoder.isRecording == true ? "stop.circle.fill" : "mic.circle.fill")
-                                    .font(.title2)
-                                Text(viewModel?.morseDecoder.isRecording == true ? "Stop Recording" : "Start Recording")
+                            if viewModel?.isRecording == true {
+                                // Recording state - show stop button with timer
+                                VStack(spacing: 8) {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "stop.circle.fill")
+                                            .font(.title2)
+                                            .imageScale(.large)
+                                        
+                                        Text("Stop Recording")
+                                            .fontWeight(.semibold)
+                                    }
+                                    
+                                    // Recording duration timer
+                                    if let duration = viewModel?.recordingDuration {
+                                        Text(formatDuration(duration))
+                                            .font(.system(.body, design: .monospaced))
+                                            .fontWeight(.medium)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.red)
+                                .foregroundColor(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .shadow(color: Color.red.opacity(0.4), radius: 12, y: 6)
+                            } else {
+                                // Not recording - show start button
+                                HStack(spacing: 12) {
+                                    Image(systemName: "mic.circle.fill")
+                                        .font(.title2)
+                                        .imageScale(.large)
+                                    
+                                    Text("Start Recording")
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.accentColor)
+                                .foregroundColor(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .shadow(color: Color.accentColor.opacity(0.3), radius: 8, y: 4)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(viewModel?.morseDecoder.isRecording == true ? Color.red : Color.accentColor)
-                            .foregroundColor(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
-                        .accessibilityLabel(viewModel?.morseDecoder.isRecording == true ? "Stop recording" : "Start recording")
+                        .accessibilityLabel(viewModel?.isRecording == true ? "Stop recording" : "Start recording")
+                        .disabled(viewModel?.isImporting == true)
+                        
+                        // Divider when recording (visual separation)
+                        if viewModel?.isRecording == true {
+                            HStack {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(height: 1)
+                                Text("OR")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(height: 1)
+                            }
+                            .padding(.vertical, 8)
+                        }
                         
                         // Import Button
                         Button {
                             showFilePicker = true
                         } label: {
-                            HStack {
+                            HStack(spacing: 12) {
                                 if viewModel?.isImporting == true {
                                     ProgressView()
                                         .tint(.white)
                                 } else {
-                                    Image(systemName: "doc.badge.plus")
+                                    Image(systemName: "folder.badge.plus")
+                                        .font(.title3)
                                     Text("Import Audio File")
+                                        .fontWeight(.medium)
                                 }
                             }
                             .frame(maxWidth: .infinity)
-                            .padding()
+                            .padding(.vertical, 14)
                             .background(Color.green)
                             .foregroundColor(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
-                        .disabled(viewModel?.isImporting == true || viewModel?.morseDecoder.isRecording == true)
+                        .disabled(viewModel?.isImporting == true || viewModel?.isRecording == true)
+                        .opacity((viewModel?.isImporting == true || viewModel?.isRecording == true) ? 0.5 : 1.0)
                         .accessibilityLabel("Import audio file")
                     }
                     .padding()
@@ -267,6 +365,14 @@ struct DecoderView: View {
                 }
             }
         }
+    }
+    
+    // Helper function to format recording duration
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        let milliseconds = Int((duration.truncatingRemainder(dividingBy: 1)) * 10)
+        return String(format: "%d:%02d.%01d", minutes, seconds, milliseconds)
     }
 }
 
