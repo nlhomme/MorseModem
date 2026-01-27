@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Required: Microphone Access for Audio Recording -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>MorseModem needs access to your microphone to record and decode Morse code audio.</string>
+    
+    <!-- Optional but Recommended: Document Access -->
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>MorseModem needs access to import audio files for Morse code decoding.</string>
+    
+    <!-- App Information -->
+    <key>CFBundleDisplayName</key>
+    <string>MorseModem</string>
+    
+    <key>CFBundleName</key>
+    <string>MorseModem</string>
+    
+    <!-- Supported File Types for Import -->
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Audio File</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.audio</string>
+            </array>
+        </dict>
+    </array>
+    
+    <!-- Supported Orientations (iPhone) -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    
+    <!-- Supported Orientations (iPad) -->
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    
+    <!-- Audio Session Category -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <!-- Uncomment if you want background audio playback -->
+        <!-- <string>audio</string> -->
+    </array>
+    
+    <!-- App Uses Haptics (no permission needed, just informational) -->
+    <!-- Note: App will gracefully handle devices without haptic support -->
+    
+    <!-- Appearance -->
+    <key>UIUserInterfaceStyle</key>
+    <string>Automatic</string> <!-- Supports both Light and Dark mode -->
+    
+    <!-- Requires iOS 17.0+ for SwiftData -->
+    <key>MinimumOSVersion</key>
+    <string>17.0</string>
+</dict>
+</plist>

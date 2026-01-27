@@ -1,0 +1,207 @@
+//
+//  EncoderView.swift
+//  MorseModem
+//
+//  Created by Nicolas Lhomme on 26/01/2026.
+//
+
+import SwiftUI
+import SwiftData
+
+struct EncoderView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \AppSettings.toneFrequency) private var settingsArray: [AppSettings]
+    
+    @State private var viewModel: EncoderViewModel?
+    @State private var showSettings = false
+    @State private var exportedFileURL: URL?
+    @State private var showShareSheet = false
+    @State private var showSuccessAlert = false
+    
+    private var settings: AppSettings {
+        if let existing = settingsArray.first {
+            return existing
+        } else {
+            let newSettings = AppSettings()
+            modelContext.insert(newSettings)
+            try? modelContext.save()
+            return newSettings
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Input Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Text to Encode")
+                            .font(.headline)
+                        
+                        TextField("Enter your message", text: Binding(
+                            get: { viewModel?.inputText ?? "" },
+                            set: { newValue in
+                                viewModel?.inputText = newValue
+                                viewModel?.updateMorseCode()
+                            }
+                        ), axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(5...10)
+                        .accessibilityLabel("Text input field")
+                        
+                        if let text = viewModel?.inputText, !text.isEmpty {
+                            Text("\(text.count) characters")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    // Morse Code Display
+                    if let morse = viewModel?.morseCode, !morse.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Morse Code")
+                                .font(.headline)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                Text(morse)
+                                    .font(.system(.title2, design: .monospaced))
+                                    .padding()
+                            }
+                            .background(Color(.tertiarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                    // Controls
+                    VStack(spacing: 16) {
+                        // Play Button
+                        Button {
+                            Task {
+                                if viewModel?.toneGenerator.isPlaying == true {
+                                    viewModel?.stopPlaying()
+                                } else {
+                                    await viewModel?.playMorse(settings: settings)
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: viewModel?.toneGenerator.isPlaying == true ? "stop.fill" : "play.fill")
+                                Text(viewModel?.toneGenerator.isPlaying == true ? "Stop" : "Play Morse Code")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(viewModel?.morseCode.isEmpty == false ? Color.accentColor : Color.gray)
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .disabled(viewModel?.morseCode.isEmpty ?? true)
+                        .accessibilityLabel(viewModel?.toneGenerator.isPlaying == true ? "Stop playing" : "Play morse code")
+                        
+                        // Export Button
+                        Button {
+                            Task {
+                                if let url = await viewModel?.exportAudio(settings: settings) {
+                                    exportedFileURL = url
+                                    showShareSheet = true
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                if viewModel?.isExporting == true {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "square.and.arrow.up")
+                                    Text("Export Audio")
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(viewModel?.morseCode.isEmpty == false ? Color.green : Color.gray)
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .disabled(viewModel?.morseCode.isEmpty ?? true || viewModel?.isExporting == true)
+                        .accessibilityLabel("Export audio file")
+                        
+                        // Clear Button
+                        Button {
+                            viewModel?.clear()
+                        } label: {
+                            HStack {
+                                Image(systemName: "xmark.circle")
+                                Text("Clear")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .foregroundColor(.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .disabled(viewModel?.inputText.isEmpty ?? true)
+                    }
+                    .padding()
+                    
+                    // Settings Preview
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Current Settings")
+                            .font(.headline)
+                        
+                        HStack {
+                            Label("\(Int(settings.toneFrequency)) Hz", systemImage: "waveform")
+                            Spacer()
+                            Label("\(settings.wordsPerMinute) WPM", systemImage: "speedometer")
+                            Spacer()
+                            Label("\(Int(settings.volume * 100))%", systemImage: "speaker.wave.2")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding()
+            }
+            .navigationTitle("Encoder")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView(settings: settings)
+            }
+            .sheet(isPresented: $showShareSheet) {
+                if let url = exportedFileURL {
+                    ShareSheet(items: [url])
+                }
+            }
+            .alert("Export Successful", isPresented: $showSuccessAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Audio file has been exported successfully.")
+            }
+        }
+        .onAppear {
+            if viewModel == nil {
+                viewModel = EncoderViewModel(modelContext: modelContext)
+            }
+        }
+    }
+}
+
+#Preview {
+    EncoderView()
+        .modelContainer(for: [AppSettings.self, Message.self], inMemory: true)
+}
