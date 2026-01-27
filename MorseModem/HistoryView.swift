@@ -88,7 +88,7 @@ struct HistoryView: View {
                 }
                 Button("Cancel", role: .cancel) { }
             } message: {
-                Text("Are you sure you want to delete all \(messages.count) message\(messages.count == 1 ? "" : "s")? This action cannot be undone.")
+                Text("Are you sure you want to delete all \(messages.count) messages? This action cannot be undone.")
             }
             .overlay {
                 if filteredMessages.isEmpty {

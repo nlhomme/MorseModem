@@ -60,9 +60,9 @@ struct MorseCodeMap {
         let punctuation = ".,?'!/()&:;=+-_\"$@"
         
         return [
-            ("Letters", letters.map { ($0, charToMorse[$0] ?? "") }),
-            ("Numbers", numbers.map { ($0, charToMorse[$0] ?? "") }),
-            ("Punctuation", punctuation.map { ($0, charToMorse[$0] ?? "") })
+            (String(localized: "Letters"), letters.map { ($0, charToMorse[$0] ?? "") }),
+            (String(localized: "Numbers"), numbers.map { ($0, charToMorse[$0] ?? "") }),
+            (String(localized: "Punctuation"), punctuation.map { ($0, charToMorse[$0] ?? "") })
         ]
     }
 }

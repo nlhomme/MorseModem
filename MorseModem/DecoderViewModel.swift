@@ -187,7 +187,7 @@ class DecoderViewModel {
             print("❌ Import error: \(error.localizedDescription)")
             print("❌ Error type: \(type(of: error))")
             print("❌ Full error: \(error)")
-            importError = "Failed to import audio file: \(error.localizedDescription)"
+            importError = String(localized: "Failed to import audio file: \(error.localizedDescription)")
             isImporting = false
             print("🎵 ===========================")
         }

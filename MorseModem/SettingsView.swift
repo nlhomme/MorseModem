@@ -66,28 +66,28 @@ struct SettingsView: View {
                         HStack {
                             Text("Dot Duration")
                             Spacer()
-                            Text(String(format: "%.3f s", settings.dotDuration))
+                            Text("\(settings.dotDuration, specifier: "%.3f") s")
                                 .foregroundStyle(.secondary)
                         }
                         
                         HStack {
                             Text("Dash Duration")
                             Spacer()
-                            Text(String(format: "%.3f s", settings.dashDuration))
+                            Text("\(settings.dashDuration, specifier: "%.3f") s")
                                 .foregroundStyle(.secondary)
                         }
                         
                         HStack {
                             Text("Character Gap")
                             Spacer()
-                            Text(String(format: "%.3f s", settings.interCharacterGap))
+                            Text("\(settings.interCharacterGap, specifier: "%.3f") s")
                                 .foregroundStyle(.secondary)
                         }
                         
                         HStack {
                             Text("Word Gap")
                             Spacer()
-                            Text(String(format: "%.3f s", settings.wordGap))
+                            Text("\(settings.wordGap, specifier: "%.3f") s")
                                 .foregroundStyle(.secondary)
                         }
                     }
