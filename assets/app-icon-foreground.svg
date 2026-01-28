@@ -1,0 +1,60 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    MorseModem App Icon - Foreground Layer
+    For iOS 26 Liquid Glass / Icon Composer
+    Transparent background for Liquid Glass effects
+  -->
+
+  <g transform="translate(512, 512)">
+
+    <!-- Signal waves (right side) -->
+    <g stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" fill="none" opacity="0.5">
+      <path d="M200 -120 C260 -60, 260 60, 200 120"/>
+      <path d="M260 -180 C350 -90, 350 90, 260 180"/>
+    </g>
+
+    <!-- Speech bubble -->
+    <path d="M-280 -220
+             C-280 -280, -230 -320, -160 -320
+             L180 -320
+             C250 -320, 290 -280, 290 -220
+             L290 100
+             C290 160, 250 200, 180 200
+             L-60 200
+             L-180 300
+             L-180 200
+             L-160 200
+             C-230 200, -280 160, -280 100
+             Z"
+          stroke="#FFFFFF"
+          stroke-width="32"
+          fill="none"/>
+
+    <!-- Morse code pattern inside bubble -->
+    <g fill="#FFFFFF">
+      <!-- Row 1: dash dot dash -->
+      <rect x="-220" y="-200" width="120" height="44" rx="22"/>
+      <circle cx="-20" cy="-178" r="22"/>
+      <rect x="60" y="-200" width="120" height="44" rx="22"/>
+
+      <!-- Row 2: dot dot dot (S for Secret) -->
+      <circle cx="-160" cy="-60" r="22"/>
+      <circle cx="-20" cy="-60" r="22"/>
+      <circle cx="120" cy="-60" r="22"/>
+
+      <!-- Row 3: dash dash dot -->
+      <rect x="-220" y="50" width="120" height="44" rx="22"/>
+      <rect x="-60" y="50" width="120" height="44" rx="22"/>
+      <circle cx="150" cy="72" r="22"/>
+    </g>
+
+    <!-- Lock icon -->
+    <g transform="translate(180, 240)">
+      <rect x="-50" y="0" width="100" height="80" rx="16" fill="#30D158"/>
+      <path d="M-25 0 L-25 -30 C-25 -60, 25 -60, 25 -30 L25 0"
+            stroke="#30D158" stroke-width="24" fill="none" stroke-linecap="round"/>
+      <circle cx="0" cy="40" r="14" fill="#FFFFFF"/>
+    </g>
+
+  </g>
+</svg>

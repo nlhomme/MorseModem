@@ -1,0 +1,68 @@
+<svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    MorseModem Logo
+    Concept: A speech bubble containing Morse code "SECRET" pattern,
+    with radiating signal waves - representing voice memos carrying
+    encoded secret messages.
+
+    The design features:
+    - Speech bubble outline (voice memo / messaging)
+    - Morse code dots and dashes inside (encoding)
+    - Signal waves radiating out (audio transmission)
+  -->
+
+  <!-- Signal waves radiating from speech bubble (audio transmission) -->
+  <g stroke="var(--hero-wave, #0071e3)" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6">
+    <path d="M76 32 C82 38, 82 58, 76 64" />
+    <path d="M82 26 C92 36, 92 60, 82 70" />
+  </g>
+
+  <!-- Speech bubble outline -->
+  <path d="M12 20
+           C12 14, 17 10, 24 10
+           L64 10
+           C71 10, 76 14, 76 20
+           L76 52
+           C76 58, 71 62, 64 62
+           L32 62
+           L20 74
+           L20 62
+           L24 62
+           C17 62, 12 58, 12 52
+           Z"
+        stroke="var(--hero-wave, #0071e3)"
+        stroke-width="3"
+        fill="none"/>
+
+  <!-- Morse code pattern inside bubble -->
+  <!-- Representing encoded message with dots and dashes -->
+  <!-- Row 1: dash dot dash (like "K" or part of pattern) -->
+  <g fill="var(--hero-wave, #0071e3)">
+    <!-- Row 1 -->
+    <rect x="22" y="24" width="14" height="5" rx="2.5"/>  <!-- dash -->
+    <circle cx="44" cy="26.5" r="2.5"/>                   <!-- dot -->
+    <rect x="52" y="24" width="14" height="5" rx="2.5"/>  <!-- dash -->
+
+    <!-- Row 2: dot dot dot (S for Secret) -->
+    <circle cx="28" cy="38" r="2.5"/>                     <!-- dot -->
+    <circle cx="44" cy="38" r="2.5"/>                     <!-- dot -->
+    <circle cx="60" cy="38" r="2.5"/>                     <!-- dot -->
+
+    <!-- Row 3: dash dash dot -->
+    <rect x="22" y="47" width="14" height="5" rx="2.5"/>  <!-- dash -->
+    <rect x="40" y="47" width="14" height="5" rx="2.5"/>  <!-- dash -->
+    <circle cx="64" cy="49.5" r="2.5"/>                   <!-- dot -->
+  </g>
+
+  <!-- Small lock icon in bottom right corner (secrecy) -->
+  <g transform="translate(58, 68)">
+    <rect x="2" y="6" width="12" height="10" rx="2"
+          fill="var(--hero-wave-alt, #34c759)"/>
+    <path d="M5 6 L5 4 C5 1, 8 -1, 11 1 L11 4 L11 6"
+          stroke="var(--hero-wave-alt, #34c759)"
+          stroke-width="2.5"
+          fill="none"
+          stroke-linecap="round"/>
+    <circle cx="8" cy="11" r="1.5" fill="white"/>
+  </g>
+</svg>
