@@ -42,4 +42,15 @@ final class AppSettings {
     var wordGap: Double {
         return dotDuration * 7
     }
+
+    /// Resolve settings from a query result, creating defaults if needed
+    static func resolve(from array: [AppSettings], in context: ModelContext) -> AppSettings {
+        if let existing = array.first {
+            return existing
+        }
+        let newSettings = AppSettings()
+        context.insert(newSettings)
+        try? context.save()
+        return newSettings
+    }
 }

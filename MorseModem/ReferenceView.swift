@@ -17,14 +17,7 @@ struct ReferenceView: View {
     @State private var playingCharacter: Character?
     
     private var settings: AppSettings {
-        if let existing = settingsArray.first {
-            return existing
-        } else {
-            let newSettings = AppSettings()
-            modelContext.insert(newSettings)
-            try? modelContext.save()
-            return newSettings
-        }
+        AppSettings.resolve(from: settingsArray, in: modelContext)
     }
     
     private var allCharacters: [(category: String, characters: [(char: Character, morse: String)])] {

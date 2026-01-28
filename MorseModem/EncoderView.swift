@@ -2,8 +2,6 @@
 //  EncoderView.swift
 //  MorseModem
 //
-//  Created by Nicolas Lhomme on 26/01/2026.
-//
 
 import SwiftUI
 import SwiftData
@@ -11,24 +9,17 @@ import SwiftData
 struct EncoderView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \AppSettings.toneFrequency) private var settingsArray: [AppSettings]
-    
+
     @State private var viewModel: EncoderViewModel?
     @State private var showSettings = false
     @State private var exportedFileURL: URL?
     @State private var showShareSheet = false
     @State private var showSuccessAlert = false
-    
+
     private var settings: AppSettings {
-        if let existing = settingsArray.first {
-            return existing
-        } else {
-            let newSettings = AppSettings()
-            modelContext.insert(newSettings)
-            try? modelContext.save()
-            return newSettings
-        }
+        AppSettings.resolve(from: settingsArray, in: modelContext)
     }
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -37,18 +28,18 @@ struct EncoderView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Text to Encode")
                             .font(.headline)
-                        
+
                         TextField("Enter your message", text: Binding(
                             get: { viewModel?.inputText ?? "" },
-                            set: { newValue in
-                                viewModel?.inputText = newValue
-                                viewModel?.updateMorseCode()
-                            }
+                            set: { viewModel?.inputText = $0 }
                         ), axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(5...10)
                         .accessibilityLabel("Text input field")
-                        
+                        .onChange(of: viewModel?.inputText) {
+                            viewModel?.updateMorseCode()
+                        }
+
                         if let text = viewModel?.inputText, !text.isEmpty {
                             Text("\(text.count) characters")
                                 .font(.caption)
@@ -58,13 +49,13 @@ struct EncoderView: View {
                     .padding()
                     .background(Color(.secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    
+
                     // Morse Code Display
                     if let morse = viewModel?.morseCode, !morse.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Morse Code")
                                 .font(.headline)
-                            
+
                             ScrollView(.horizontal, showsIndicators: false) {
                                 Text(morse)
                                     .font(.system(.title2, design: .monospaced))
@@ -77,7 +68,7 @@ struct EncoderView: View {
                         .background(Color(.secondarySystemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    
+
                     // Controls
                     VStack(spacing: 16) {
                         // Play Button
@@ -102,7 +93,7 @@ struct EncoderView: View {
                         }
                         .disabled(viewModel?.morseCode.isEmpty ?? true)
                         .accessibilityLabel(viewModel?.toneGenerator.isPlaying == true ? "Stop playing" : "Play morse code")
-                        
+
                         // Export Button
                         Button {
                             Task {
@@ -129,7 +120,7 @@ struct EncoderView: View {
                         }
                         .disabled(viewModel?.morseCode.isEmpty ?? true || viewModel?.isExporting == true)
                         .accessibilityLabel("Export audio file")
-                        
+
                         // Clear Button
                         Button {
                             viewModel?.clear()
@@ -147,12 +138,12 @@ struct EncoderView: View {
                         .disabled(viewModel?.inputText.isEmpty ?? true)
                     }
                     .padding()
-                    
+
                     // Settings Preview
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Current Settings")
                             .font(.headline)
-                        
+
                         HStack {
                             Label("\(Int(settings.toneFrequency)) Hz", systemImage: "waveform")
                             Spacer()
