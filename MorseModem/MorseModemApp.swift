@@ -9,6 +9,7 @@ import SwiftData
 @main
 struct MorseModemApp: App {
     @State private var sharedAudioURL: URL?
+    @State private var showSplash = true
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -26,10 +27,25 @@ struct MorseModemApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(sharedAudioURL: $sharedAudioURL)
-                .onOpenURL { url in
-                    sharedAudioURL = url
+            ZStack {
+                ContentView(sharedAudioURL: $sharedAudioURL)
+                    .onOpenURL { url in
+                        sharedAudioURL = url
+                    }
+
+                if showSplash {
+                    SplashScreenView()
+                        .transition(.opacity)
+                        .zIndex(1)
                 }
+            }
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        showSplash = false
+                    }
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
     }
