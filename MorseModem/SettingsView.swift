@@ -108,6 +108,14 @@ struct SettingsView: View {
                             .frame(maxWidth: .infinity)
                     }
                 }
+
+                Section {
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        Label("About", systemImage: "info.circle")
+                    }
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
