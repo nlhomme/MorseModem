@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+*.xcodeproj/xcuserdata/
+
+# Build outputs
+build/
+.build/
+*.xcarchive
+*.ipa
+
+# Swift Package Manager
+.swiftpm/
+Packages/
+
+# CocoaPods (if used)
+Pods/
+
+# Sensitive configuration
+Config.xcconfig
