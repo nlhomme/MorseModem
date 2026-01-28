@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "self:">
+   </FileRef>
+   <FileRef
+      location = "group:AUDIO_IMPORT_FIX.md">
+   </FileRef>
+   <FileRef
+      location = "group:AUDIO_IMPORT_FLOW.md">
+   </FileRef>
+   <FileRef
+      location = "group:SHARE_SHEET_TROUBLESHOOTING.md">
+   </FileRef>
+   <FileRef
+      location = "group:RECORDING_UI_IMPROVEMENTS.md">
+   </FileRef>
+   <FileRef
+      location = "group:RECORDING_UI_VISUAL_MOCKUP.md">
+   </FileRef>
+   <FileRef
+      location = "group:RECORDING_UI_TROUBLESHOOTING.md">
+   </FileRef>
+</Workspace>

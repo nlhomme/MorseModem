@@ -1,0 +1,4 @@
+// Configuration settings for MorseModem
+// Copy this file to Config.xcconfig and fill in your Apple Developer Team ID
+
+DEVELOPMENT_TEAM = YOUR_TEAM_ID_HERE
