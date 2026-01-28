@@ -1,0 +1,80 @@
+<svg width="1290" height="2796" viewBox="0 0 1290 2796" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    MorseModem Splash Screen / Launch Screen
+    Designed for iPhone 15 Pro Max (1290 x 2796 @ 3x)
+  -->
+
+  <defs>
+    <linearGradient id="splashBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0077ED"/>
+      <stop offset="100%" style="stop-color:#0055B3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1290" height="2796" fill="url(#splashBg)"/>
+
+  <!-- Logo centered -->
+  <g transform="translate(645, 1300)">
+
+    <!-- Signal waves -->
+    <g stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.5">
+      <path d="M150 -90 C195 -45, 195 45, 150 90"/>
+      <path d="M195 -135 C263 -68, 263 68, 195 135"/>
+    </g>
+
+    <!-- Speech bubble -->
+    <path d="M-210 -165
+             C-210 -210, -173 -240, -120 -240
+             L135 -240
+             C188 -240, 218 -210, 218 -165
+             L218 75
+             C218 120, 188 150, 135 150
+             L-45 150
+             L-135 225
+             L-135 150
+             L-120 150
+             C-173 150, -210 120, -210 75
+             Z"
+          stroke="#FFFFFF"
+          stroke-width="10"
+          fill="none"/>
+
+    <!-- Morse code pattern -->
+    <g fill="#FFFFFF">
+      <!-- Row 1: dash dot dash -->
+      <rect x="-165" y="-150" width="90" height="33" rx="16.5"/>
+      <circle cx="-15" cy="-133.5" r="16.5"/>
+      <rect x="45" y="-150" width="90" height="33" rx="16.5"/>
+
+      <!-- Row 2: dot dot dot -->
+      <circle cx="-120" cy="-45" r="16.5"/>
+      <circle cx="-15" cy="-45" r="16.5"/>
+      <circle cx="90" cy="-45" r="16.5"/>
+
+      <!-- Row 3: dash dash dot -->
+      <rect x="-165" y="37" width="90" height="33" rx="16.5"/>
+      <rect x="-45" y="37" width="90" height="33" rx="16.5"/>
+      <circle cx="112" cy="53.5" r="16.5"/>
+    </g>
+
+    <!-- Lock icon -->
+    <g transform="translate(135, 180)">
+      <rect x="-38" y="0" width="75" height="60" rx="12" fill="#30D158"/>
+      <path d="M-19 0 L-19 -23 C-19 -45, 19 -45, 19 -23 L19 0"
+            stroke="#30D158" stroke-width="18" fill="none" stroke-linecap="round"/>
+      <circle cx="0" cy="30" r="10" fill="#FFFFFF"/>
+    </g>
+
+  </g>
+
+  <!-- App Name -->
+  <text x="645" y="1620" text-anchor="middle" font-family="-apple-system, SF Pro Display, Helvetica Neue, sans-serif" font-size="72" font-weight="600" fill="#FFFFFF" letter-spacing="-0.02em">
+    MorseModem
+  </text>
+
+  <!-- Tagline -->
+  <text x="645" y="1690" text-anchor="middle" font-family="-apple-system, SF Pro Text, Helvetica Neue, sans-serif" font-size="32" font-weight="400" fill="#FFFFFF" opacity="0.8">
+    Share secrets in Morse code
+  </text>
+</svg>
