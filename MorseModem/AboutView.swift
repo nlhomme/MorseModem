@@ -50,7 +50,7 @@ struct AboutView: View {
 
             Section(String(localized: "Legal")) {
                 // TODO: Replace with your actual Privacy Policy URL
-                Link(destination: URL(string: "https://example.com/privacy")!) {
+                Link(destination: URL(string: "https://morsemodem.lhomme.xyz/privacy.html")!) {
                     Label(String(localized: "Privacy Policy"), systemImage: "lock.shield")
                 }
             }
