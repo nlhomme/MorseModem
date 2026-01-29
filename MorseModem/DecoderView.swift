@@ -53,17 +53,18 @@ struct DecoderView: View {
             .fileImporter(
                 isPresented: $showFilePicker,
                 allowedContentTypes: [.audio],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    if let url = urls.first {
-                        Task { await viewModel?.importAudioFile(url: url) }
+                allowsMultipleSelection: false,
+                onCompletion: { result in
+                    switch result {
+                    case .success(let urls):
+                        if let url = urls.first {
+                            Task { await viewModel?.importAudioFile(url: url) }
+                        }
+                    case .failure(let error):
+                        viewModel?.importError = error.localizedDescription
                     }
-                case .failure(let error):
-                    viewModel?.importError = error.localizedDescription
                 }
-            }
+            )
             .alert("Copied", isPresented: $showCopiedAlert) {
                 Button("OK", role: .cancel) { }
             } message: {
