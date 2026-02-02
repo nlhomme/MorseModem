@@ -20,6 +20,8 @@ struct EncoderView: View {
         AppSettings.resolve(from: settingsArray, in: modelContext)
     }
 
+    @FocusState private var isFocused: Bool
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -36,8 +38,16 @@ struct EncoderView: View {
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(5...10)
                         .accessibilityLabel("Text input field")
-                        .onChange(of: viewModel?.inputText) {
+                        .onChange(of: viewModel?.inputText) { oldValue, newValue in
                             viewModel?.updateMorseCode()
+                        }
+                        .focused($isFocused)
+                        .submitLabel(.done)
+                        .onChange(of: viewModel?.inputText) { oldValue, newValue in
+                            guard isFocused else { return }
+                            guard newValue?.contains("\n") == true else { return }
+                            isFocused = false
+                            viewModel?.inputText = newValue?.replacing("\n", with: "") ?? ""
                         }
 
                         if let text = viewModel?.inputText, !text.isEmpty {
