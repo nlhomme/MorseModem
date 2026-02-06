@@ -14,6 +14,7 @@ class ToneGenerator {
     private var audioEngine: AVAudioEngine?
     private var playerNode: AVAudioPlayerNode?
     private var hapticEngine: CHHapticEngine?
+    private var hapticPlayer: CHHapticPatternPlayer?
 
     private let sampleRate: Double = 44100.0
     private let fadeInOutDuration: Double = 0.005
@@ -185,6 +186,11 @@ class ToneGenerator {
         audioEngine?.stop()
         audioEngine = nil
         playerNode = nil
+        
+        // Stop haptic feedback
+        try? hapticPlayer?.stop(atTime: CHHapticTimeImmediate)
+        hapticPlayer = nil
+        
         isPlaying = false
     }
 
@@ -234,6 +240,7 @@ class ToneGenerator {
         do {
             let pattern = try CHHapticPattern(events: events, parameters: [])
             let player = try hapticEngine.makePlayer(with: pattern)
+            hapticPlayer = player
             try player.start(atTime: CHHapticTimeImmediate)
         } catch {
             print("Failed to play haptic pattern: \(error)")
