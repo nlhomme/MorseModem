@@ -9,6 +9,7 @@ import UniformTypeIdentifiers
 
 struct DecoderView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Binding var sharedAudioURL: URL?
 
     @State private var viewModel: DecoderViewModel?
@@ -110,6 +111,13 @@ struct DecoderView: View {
                 } else {
                     pendingURL = url
                     sharedAudioURL = nil
+                }
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background {
+                if viewModel?.isRecording == true {
+                    viewModel?.stopRecording()
                 }
             }
         }

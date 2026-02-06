@@ -8,6 +8,7 @@ import SwiftData
 
 struct EncoderView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \AppSettings.toneFrequency) private var settingsArray: [AppSettings]
 
     @State private var viewModel: EncoderViewModel?
@@ -197,6 +198,11 @@ struct EncoderView: View {
         .onAppear {
             if viewModel == nil {
                 viewModel = EncoderViewModel(modelContext: modelContext)
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background {
+                viewModel?.stopPlaying()
             }
         }
     }
