@@ -6,6 +6,8 @@
 //
 
 import Testing
+import AVFoundation
+import SwiftData
 @testable import MorseModem
 
 @Suite("Morse Code Encoding Tests")
@@ -142,20 +144,20 @@ struct AppSettingsTests {
 }
 @Suite("Morse Code Map Tests")
 struct MorseCodeMapTests {
-    
+
     @Test("All characters have mappings")
     func allCharactersHaveMappings() async throws {
         let allChars = MorseCodeMap.allCharacters()
-        
+
         var totalCount = 0
         for category in allChars {
             totalCount += category.characters.count
         }
-        
+
         #expect(totalCount > 0, "Should have character mappings")
         #expect(allChars.count == 3, "Should have 3 categories: Letters, Numbers, Punctuation")
     }
-    
+
     @Test("Reverse mapping consistency")
     func reverseMappingConsistency() async throws {
         // Verify that encoding and then using reverse map works
@@ -167,4 +169,190 @@ struct MorseCodeMapTests {
     }
 }
 
+// MARK: - ToneGenerator Tests
 
+@MainActor
+@Suite("Tone Generator Tests")
+struct ToneGeneratorTests {
+
+    @Test("generateMorseAudio returns a buffer for valid morse")
+    func returnsBufferForValidMorse() async throws {
+        let buffer = ToneGenerator().generateMorseAudio(morse: ".", settings: AppSettings())
+        #expect(buffer != nil)
+    }
+
+    @Test("Single dot buffer duration matches dot duration")
+    func singleDotDuration() async throws {
+        let settings = AppSettings(wordsPerMinute: 12)
+        let buffer = try #require(ToneGenerator().generateMorseAudio(morse: ".", settings: settings))
+        let actual = Double(buffer.frameLength) / 44100.0
+        #expect(abs(actual - settings.dotDuration) < 0.001)
+    }
+
+    @Test("S (…) buffer duration equals 3 dots + 2 intra-char gaps")
+    func sLetterDuration() async throws {
+        let settings = AppSettings(wordsPerMinute: 12)
+        let buffer = try #require(ToneGenerator().generateMorseAudio(morse: "...", settings: settings))
+        let expected = 3 * settings.dotDuration + 2 * settings.intraCharacterGap
+        let actual = Double(buffer.frameLength) / 44100.0
+        #expect(abs(actual - expected) < 0.002)
+    }
+
+    @Test("Dash buffer duration is three times dot duration")
+    func dashDuration() async throws {
+        let settings = AppSettings(wordsPerMinute: 12)
+        let dot = try #require(ToneGenerator().generateMorseAudio(morse: ".", settings: settings))
+        let dash = try #require(ToneGenerator().generateMorseAudio(morse: "-", settings: settings))
+        let dotSecs = Double(dot.frameLength) / 44100.0
+        let dashSecs = Double(dash.frameLength) / 44100.0
+        #expect(abs(dashSecs - dotSecs * 3) < 0.002)
+    }
+}
+
+// MARK: - EncoderViewModel Tests
+
+@MainActor
+@Suite("Encoder View Model Tests")
+struct EncoderViewModelTests {
+
+    private func makeViewModel() throws -> EncoderViewModel {
+        let container = try ModelContainer(
+            for: Message.self, AppSettings.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        return EncoderViewModel(modelContext: container.mainContext)
+    }
+
+    @Test("updateMorseCode encodes inputText to morse")
+    func updateMorseCode() async throws {
+        let vm = try makeViewModel()
+        vm.inputText = "SOS"
+        vm.updateMorseCode()
+        #expect(vm.morseCode == "... --- ...")
+    }
+
+    @Test("updateMorseCode produces empty output for empty input")
+    func emptyInputGivesEmptyMorse() async throws {
+        let vm = try makeViewModel()
+        vm.inputText = ""
+        vm.updateMorseCode()
+        #expect(vm.morseCode.isEmpty)
+    }
+
+    @Test("clear resets inputText and morseCode")
+    func clearResetsState() async throws {
+        let vm = try makeViewModel()
+        vm.inputText = "HELLO"
+        vm.morseCode = ".... . .-.. .-.. ---"
+        vm.clear()
+        #expect(vm.inputText.isEmpty)
+        #expect(vm.morseCode.isEmpty)
+    }
+}
+
+// MARK: - AppSettings Resolve Tests
+
+@MainActor
+@Suite("App Settings Resolve Tests")
+struct AppSettingsResolveTests {
+
+    @Test("Creates default settings when array is empty")
+    func createsDefaultsWhenEmpty() async throws {
+        let container = try ModelContainer(
+            for: AppSettings.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let settings = AppSettings.resolve(from: [], in: container.mainContext)
+        #expect(settings.toneFrequency == 700)
+        #expect(settings.wordsPerMinute == 12)
+        #expect(settings.volume == 0.8)
+    }
+
+    @Test("Returns first element when array is non-empty")
+    func returnsExistingWhenPresent() async throws {
+        let container = try ModelContainer(
+            for: AppSettings.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let custom = AppSettings(toneFrequency: 500, wordsPerMinute: 20, volume: 0.5)
+        container.mainContext.insert(custom)
+        let resolved = AppSettings.resolve(from: [custom], in: container.mainContext)
+        #expect(resolved.toneFrequency == 500)
+        #expect(resolved.wordsPerMinute == 20)
+        #expect(resolved.volume == 0.5)
+    }
+}
+
+// MARK: - MorseDecoder Signal Tests
+
+@MainActor
+@Suite("Morse Decoder Signal Tests")
+struct MorseDecoderSignalTests {
+
+    @Test("computeEnvelope returns 1.0 for full-amplitude signal")
+    func envelopeFullAmplitude() async throws {
+        let envelope = MorseDecoder().computeEnvelope(samples: [Float](repeating: 1.0, count: 1024))
+        #expect(!envelope.isEmpty)
+        #expect(envelope.allSatisfy { abs($0 - 1.0) < 0.001 })
+    }
+
+    @Test("computeEnvelope returns 0.0 for silence")
+    func envelopeSilence() async throws {
+        let envelope = MorseDecoder().computeEnvelope(samples: [Float](repeating: 0.0, count: 1024))
+        #expect(envelope.allSatisfy { $0 == 0.0 })
+    }
+
+    @Test("detectSegments groups consecutive tones and silences")
+    func detectsTonesAndSilences() async throws {
+        // [1, 1, 1, 0, 0]: sorted 75th-pct = 1.0, threshold = 0.5 → tone×3, silence×2
+        let segments = MorseDecoder().detectSegments(envelope: [1.0, 1.0, 1.0, 0.0, 0.0])
+        #expect(segments.count == 2)
+        #expect(segments[0].isTone == true)
+        #expect(segments[1].isTone == false)
+    }
+
+    @Test("segmentsToMorse: 1-unit tone → dot")
+    func shortToneIsDot() async throws {
+        let decoder = MorseDecoder()
+        let seg: [(isTone: Bool, duration: Double)] = [(true, 0.1)]
+        decoder.detectUnitDuration(segments: seg)
+        #expect(decoder.segmentsToMorse(segments: seg) == ".")
+    }
+
+    @Test("segmentsToMorse: 3-unit tone → dash")
+    func longToneIsDash() async throws {
+        let decoder = MorseDecoder()
+        decoder.detectUnitDuration(segments: [(true, 0.1)])
+        #expect(decoder.segmentsToMorse(segments: [(true, 0.3)]) == "-")
+    }
+
+    @Test("segmentsToMorse: dot + intra-gap + dash → .- (letter A)")
+    func letterA() async throws {
+        let decoder = MorseDecoder()
+        let seg: [(isTone: Bool, duration: Double)] = [
+            (true, 0.1), (false, 0.08), (true, 0.3)
+        ]
+        decoder.detectUnitDuration(segments: seg)
+        #expect(decoder.segmentsToMorse(segments: seg) == ".-")
+    }
+
+    @Test("segmentsToMorse: 3-unit silence → inter-character space")
+    func interCharacterSpace() async throws {
+        let decoder = MorseDecoder()
+        decoder.detectUnitDuration(segments: [(true, 0.1)])
+        let seg: [(isTone: Bool, duration: Double)] = [
+            (true, 0.1), (false, 0.3), (true, 0.1)
+        ]
+        #expect(decoder.segmentsToMorse(segments: seg) == ". .")
+    }
+
+    @Test("segmentsToMorse: 7-unit silence → word gap (double space)")
+    func wordGap() async throws {
+        let decoder = MorseDecoder()
+        decoder.detectUnitDuration(segments: [(true, 0.1)])
+        let seg: [(isTone: Bool, duration: Double)] = [
+            (true, 0.1), (false, 0.7), (true, 0.1)
+        ]
+        #expect(decoder.segmentsToMorse(segments: seg) == ".  .")
+    }
+}

@@ -63,7 +63,7 @@ struct HistoryView: View {
                 .onDelete(perform: deleteMessages)
             }
             .navigationTitle("History")
-            .searchable(text: $searchText, prompt: "Search messages")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search messages")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     EditButton()

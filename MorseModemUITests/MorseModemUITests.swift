@@ -25,6 +25,7 @@ private struct LocaleConfig {
     let sliderValueFrequency: String
     let sliderValueSpeed: String
     let sliderValueVolume: String
+    let navHistory: String
 }
 
 final class MorseModemUITests: XCTestCase {
@@ -40,7 +41,8 @@ final class MorseModemUITests: XCTestCase {
             btnStartRecording: "Start recording", btnImportAudio: "Import audio file",
             navSettings: "Settings",
             sliderToneFrequency: "Tone Frequency", sliderSpeed: "Speed", sliderVolume: "Volume",
-            sliderValueFrequency: "700 hertz", sliderValueSpeed: "12 words per minute", sliderValueVolume: "80 percent"
+            sliderValueFrequency: "700 hertz", sliderValueSpeed: "12 words per minute", sliderValueVolume: "80 percent",
+            navHistory: "History"
         ),
         LocaleConfig(
             language: "fr", locale: "fr_FR",
@@ -50,7 +52,8 @@ final class MorseModemUITests: XCTestCase {
             btnStartRecording: "Démarrer l'enregistrement", btnImportAudio: "Importer un fichier audio",
             navSettings: "Réglages",
             sliderToneFrequency: "Fréquence du son", sliderSpeed: "Vitesse", sliderVolume: "Volume",
-            sliderValueFrequency: "700 hertz", sliderValueSpeed: "12 mots par minute", sliderValueVolume: "80 pour cent"
+            sliderValueFrequency: "700 hertz", sliderValueSpeed: "12 mots par minute", sliderValueVolume: "80 pour cent",
+            navHistory: "Historique"
         )
     ]
 
@@ -62,6 +65,12 @@ final class MorseModemUITests: XCTestCase {
     private func launch(with config: LocaleConfig) {
         app.launchArguments = ["-AppleLanguages", "(\(config.language))", "-AppleLocale", config.locale]
         app.launch()
+    }
+
+    // iOS 18 floating tab bar nests two Button elements per item with the same label.
+    // Using firstMatch avoids the "multiple matching elements" error from .tap().
+    private func tapTab(_ label: String) {
+        app.buttons.matching(NSPredicate(format: "label == %@", label)).firstMatch.tap()
     }
 
     // MARK: - Tab Bar
@@ -124,8 +133,10 @@ final class MorseModemUITests: XCTestCase {
         for config in Self.supportedLocales {
             launch(with: config)
             let tag = "[\(config.language)]"
-            app.buttons[config.tabDecoder].tap()
-            XCTAssertTrue(app.buttons[config.btnStartRecording].waitForExistence(timeout: 2), "\(tag) Start recording button missing")
+            // Wait for splash to clear before tapping tab (avoids silent tap failure on iPad)
+            XCTAssertTrue(app.buttons[config.btnSettings].waitForExistence(timeout: 5))
+            tapTab(config.tabDecoder)
+            XCTAssertTrue(app.buttons[config.btnStartRecording].waitForExistence(timeout: 5), "\(tag) Start recording button missing")
             XCTAssertTrue(app.buttons[config.btnImportAudio].exists, "\(tag) Import audio button missing")
             app.terminate()
         }
@@ -157,6 +168,64 @@ final class MorseModemUITests: XCTestCase {
             XCTAssertEqual(app.sliders[config.sliderToneFrequency].value as? String, config.sliderValueFrequency, "\(tag) Frequency default wrong")
             XCTAssertEqual(app.sliders[config.sliderSpeed].value as? String, config.sliderValueSpeed, "\(tag) Speed default wrong")
             XCTAssertEqual(app.sliders[config.sliderVolume].value as? String, config.sliderValueVolume, "\(tag) Volume default wrong")
+            app.terminate()
+        }
+    }
+
+    // MARK: - Encoder Interaction
+
+    @MainActor
+    func testEncoderTypingEnablesButtons() {
+        for config in Self.supportedLocales {
+            launch(with: config)
+            let tag = "[\(config.language)]"
+            XCTAssertTrue(app.buttons[config.btnSettings].waitForExistence(timeout: 5))
+            let textInput: XCUIElement = app.textViews.firstMatch.exists
+                ? app.textViews.firstMatch
+                : app.textFields.firstMatch
+            XCTAssertTrue(textInput.exists, "\(tag) Text input not found")
+            textInput.tap()
+            textInput.typeText("A")
+            XCTAssertTrue(app.buttons[config.btnClear].isEnabled, "\(tag) Clear should be enabled after typing")
+            app.terminate()
+        }
+    }
+
+    // MARK: - History Tab
+
+    @MainActor
+    func testHistoryTabNavigationTitle() {
+        for config in Self.supportedLocales {
+            launch(with: config)
+            let tag = "[\(config.language)]"
+            // Wait for splash to clear before navigating
+            XCTAssertTrue(app.buttons[config.btnSettings].waitForExistence(timeout: 5))
+            tapTab(config.tabHistory)
+            // On iPad the sidebar TabView layout doesn't produce a navigationBars entry;
+            // the History search field is a more universal anchor.
+            XCTAssertTrue(
+                app.searchFields.firstMatch.waitForExistence(timeout: 5),
+                "\(tag) History search field not found after navigation"
+            )
+            app.terminate()
+        }
+    }
+
+    // MARK: - Reference Tab
+
+    @MainActor
+    func testReferenceSearchFieldIsAccessible() {
+        for config in Self.supportedLocales {
+            launch(with: config)
+            let tag = "[\(config.language)]"
+            // Wait for splash to clear before tapping tab (avoids silent tap failure on iPad)
+            XCTAssertTrue(app.buttons[config.btnSettings].waitForExistence(timeout: 5))
+            tapTab(config.tabReference)
+            let searchField = app.searchFields.firstMatch
+            XCTAssertTrue(searchField.waitForExistence(timeout: 3), "\(tag) Reference search field not found")
+            searchField.tap()
+            searchField.typeText("A")
+            XCTAssertEqual(searchField.value as? String, "A", "\(tag) Search field should contain typed text")
             app.terminate()
         }
     }

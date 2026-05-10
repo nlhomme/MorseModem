@@ -127,7 +127,7 @@ class MorseDecoder {
     }
 
     /// Compute amplitude envelope
-    private func computeEnvelope(samples: [Float]) -> [Float] {
+    func computeEnvelope(samples: [Float]) -> [Float] {
         let halfWindow = envelopeWindowSize / 2
         var envelope: [Float] = []
         envelope.reserveCapacity(samples.count / halfWindow + 1)
@@ -144,7 +144,7 @@ class MorseDecoder {
     }
 
     /// Detect tone and silence segments
-    private func detectSegments(envelope: [Float]) -> [(isTone: Bool, duration: Double)] {
+    func detectSegments(envelope: [Float]) -> [(isTone: Bool, duration: Double)] {
         guard !envelope.isEmpty else { return [] }
 
         var segments: [(Bool, Double)] = []
@@ -179,7 +179,7 @@ class MorseDecoder {
     }
 
     /// Auto-detect unit duration (dot duration)
-    private func detectUnitDuration(segments: [(isTone: Bool, duration: Double)]) {
+    func detectUnitDuration(segments: [(isTone: Bool, duration: Double)]) {
         let toneDurations = segments.filter { $0.isTone }.map { $0.duration }
         guard !toneDurations.isEmpty else { return }
 
@@ -188,7 +188,7 @@ class MorseDecoder {
     }
 
     /// Convert segments to Morse code string
-    private func segmentsToMorse(segments: [(isTone: Bool, duration: Double)]) -> String {
+    func segmentsToMorse(segments: [(isTone: Bool, duration: Double)]) -> String {
         var morse = ""
         let unit = detectedUnitDuration
 

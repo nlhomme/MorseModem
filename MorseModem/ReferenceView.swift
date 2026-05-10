@@ -79,7 +79,7 @@ struct ReferenceView: View {
                 }
             }
             .navigationTitle("Morse Reference")
-            .searchable(text: $searchText, prompt: "Search characters")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search characters")
             .overlay {
                 if filteredCharacters.isEmpty {
                     ContentUnavailableView.search(text: searchText)
