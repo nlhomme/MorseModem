@@ -11,9 +11,12 @@ A SwiftUI iOS / iPadOS app that encodes text to Morse code audio and decodes Mor
 
 Settings: tone frequency, words-per-minute (PARIS timing), volume.
 
+More information about the app: <https://morsemodem.lhomme.xyz/>
+
 ## Requirements
 
 - **iOS / iPadOS 26.2** (`MorseModem` scheme) or **26.4** (`MorseModem Beta` scheme)
+- Also runs on **macOS** (Designed for iPad) and **visionOS** (Apple Vision Pro) via the iPad build
 - Xcode supporting Swift 6 strict concurrency
 - Microphone permission (recording) and Files access (audio import) — requested at first use
 
