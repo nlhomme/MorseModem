@@ -2,7 +2,7 @@
 
 ## Build Configuration
 
-- **Minimum Deployment Target:** iOS 26.2 (target `MorseModem`), iOS 26.4 (Beta target). Bumping these requires updating both targets in `project.pbxproj`.
+- **Minimum Deployment Target:** iOS 26.4 for all targets and configurations (the project-level setting in `project.pbxproj` is `26.2`, but it is overridden by every target's per-config setting — Xcode shows the effective `26.4` under each target's "Minimum Deployments").
 - **Swift:** 6.0 (strict concurrency) for app + tests. `MorseModemUITests` is on Swift 5.0.
 - **Universal:** `TARGETED_DEVICE_FAMILY = "1,2"` (iPhone + iPad).
 - **Frameworks (system, no third-party deps):** `SwiftUI`, `SwiftData`, `AVFoundation`, `CoreHaptics`, `Accelerate`, `UniformTypeIdentifiers`, `Testing`.

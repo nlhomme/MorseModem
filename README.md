@@ -15,7 +15,7 @@ More information about the app: <https://morsemodem.lhomme.xyz/>
 
 ## Requirements
 
-- **iOS / iPadOS 26.2** (`MorseModem` scheme) or **26.4** (`MorseModem Beta` scheme)
+- **iOS / iPadOS 26.4** minimum (both `MorseModem` and `MorseModem Beta` schemes)
 - Also runs on **macOS** (Designed for iPad) and **visionOS** (Apple Vision Pro) via the iPad build
 - Xcode supporting Swift 6 strict concurrency
 - Microphone permission (recording) and Files access (audio import) — requested at first use
@@ -51,7 +51,6 @@ Schemes:
 - **SwiftData** for `Message` history and `AppSettings`
 - **AVFoundation** (`AVAudioEngine`, `AVAudioPlayerNode`) for tone synthesis and capture
 - **CoreHaptics** for synchronized tactile feedback
-- **Accelerate** imported for envelope math
 - **Swift Testing** (`@Suite`/`@Test`/`#expect`) for unit tests; XCTest for UI tests
 
 All processing runs on-device. No analytics, no network calls.
