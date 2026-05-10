@@ -5,13 +5,62 @@
 
 import XCTest
 
+private struct LocaleConfig {
+    let language: String
+    let locale: String
+    let tabEncoder: String
+    let tabDecoder: String
+    let tabReference: String
+    let tabHistory: String
+    let btnSettings: String
+    let btnPlayMorse: String
+    let btnExportAudio: String
+    let btnClear: String
+    let btnStartRecording: String
+    let btnImportAudio: String
+    let navSettings: String
+    let sliderToneFrequency: String
+    let sliderSpeed: String
+    let sliderVolume: String
+    let sliderValueFrequency: String
+    let sliderValueSpeed: String
+    let sliderValueVolume: String
+}
+
 final class MorseModemUITests: XCTestCase {
 
     var app: XCUIApplication!
 
+    private static let supportedLocales: [LocaleConfig] = [
+        LocaleConfig(
+            language: "en", locale: "en_US",
+            tabEncoder: "Encoder", tabDecoder: "Decoder", tabReference: "Reference", tabHistory: "History",
+            btnSettings: "Settings", btnPlayMorse: "Play morse code",
+            btnExportAudio: "Export audio file", btnClear: "Clear",
+            btnStartRecording: "Start recording", btnImportAudio: "Import audio file",
+            navSettings: "Settings",
+            sliderToneFrequency: "Tone Frequency", sliderSpeed: "Speed", sliderVolume: "Volume",
+            sliderValueFrequency: "700 hertz", sliderValueSpeed: "12 words per minute", sliderValueVolume: "80 percent"
+        ),
+        LocaleConfig(
+            language: "fr", locale: "fr_FR",
+            tabEncoder: "Encodeur", tabDecoder: "Décodeur", tabReference: "Référence", tabHistory: "Historique",
+            btnSettings: "Réglages", btnPlayMorse: "Jouer le code Morse",
+            btnExportAudio: "Exporter le fichier audio", btnClear: "Effacer",
+            btnStartRecording: "Démarrer l'enregistrement", btnImportAudio: "Importer un fichier audio",
+            navSettings: "Réglages",
+            sliderToneFrequency: "Fréquence du son", sliderSpeed: "Vitesse", sliderVolume: "Volume",
+            sliderValueFrequency: "700 hertz", sliderValueSpeed: "12 mots par minute", sliderValueVolume: "80 pour cent"
+        )
+    ]
+
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
+    }
+
+    private func launch(with config: LocaleConfig) {
+        app.launchArguments = ["-AppleLanguages", "(\(config.language))", "-AppleLocale", config.locale]
         app.launch()
     }
 
@@ -19,27 +68,49 @@ final class MorseModemUITests: XCTestCase {
 
     @MainActor
     func testTabBarAccessibilityLabels() {
-        XCTAssertTrue(app.tabBars.buttons["Encoder"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Decoder"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Reference"].exists)
-        XCTAssertTrue(app.tabBars.buttons["History"].exists)
+        // iOS 18 uses a floating tab bar (_UIFloatingTabBarItemCell), not UITabBar,
+        // so scope to the app level rather than app.tabBars.
+        for config in Self.supportedLocales {
+            launch(with: config)
+            let tag = "[\(config.language)]"
+            XCTAssertTrue(app.buttons[config.tabEncoder].exists, "\(tag) '\(config.tabEncoder)' tab missing")
+            XCTAssertTrue(app.buttons[config.tabDecoder].exists, "\(tag) '\(config.tabDecoder)' tab missing")
+            XCTAssertTrue(app.buttons[config.tabReference].exists, "\(tag) '\(config.tabReference)' tab missing")
+            XCTAssertTrue(app.buttons[config.tabHistory].exists, "\(tag) '\(config.tabHistory)' tab missing")
+            app.terminate()
+        }
     }
 
     // MARK: - Encoder Tab
 
     @MainActor
     func testEncoderInteractiveElementsAreAccessible() {
-        XCTAssertTrue(app.buttons["Settings"].exists)
-        XCTAssertTrue(app.buttons["Play morse code"].exists)
-        XCTAssertTrue(app.buttons["Export audio file"].exists)
-        XCTAssertTrue(app.buttons["Clear"].exists)
+        for config in Self.supportedLocales {
+            launch(with: config)
+            let tag = "[\(config.language)]"
+            XCTAssertTrue(app.buttons[config.btnSettings].exists, "\(tag) Settings button missing")
+            XCTAssertTrue(app.buttons[config.btnPlayMorse].exists, "\(tag) Play button missing")
+            XCTAssertTrue(app.buttons[config.btnExportAudio].exists, "\(tag) Export button missing")
+            XCTAssertTrue(app.buttons[config.btnClear].exists, "\(tag) Clear button missing")
+            app.terminate()
+        }
     }
 
     @MainActor
     func testEncoderMorseCodeHiddenFromAccessibilityTree() {
-        // SwiftUI TextField with axis:.vertical renders as UITextView
-        let textInput = app.textViews.firstMatch
-        XCTAssertTrue(textInput.waitForExistence(timeout: 2))
+        // Morse encoding is language-independent; verify once using the first supported locale.
+        launch(with: Self.supportedLocales[0])
+        let config = Self.supportedLocales[0]
+        // Wait for splash screen to clear (1.5 s display + 0.3 s fade) before querying
+        XCTAssertTrue(app.buttons[config.btnSettings].waitForExistence(timeout: 5))
+        // TextField(axis:.vertical) renders as textView; fall back to textField on future iOS
+        let textInput: XCUIElement
+        if app.textViews.firstMatch.exists {
+            textInput = app.textViews.firstMatch
+        } else {
+            textInput = app.textFields.firstMatch
+        }
+        XCTAssertTrue(textInput.exists, "Text input field not found in encoder")
         textInput.tap()
         textInput.typeText("SOS")
         // "SOS" encodes to "... --- ..." — must not be reachable via the accessibility tree
@@ -50,29 +121,44 @@ final class MorseModemUITests: XCTestCase {
 
     @MainActor
     func testDecoderInteractiveElementsAreAccessible() {
-        app.tabBars.buttons["Decoder"].tap()
-        XCTAssertTrue(app.buttons["Start recording"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.buttons["Import audio file"].exists)
+        for config in Self.supportedLocales {
+            launch(with: config)
+            let tag = "[\(config.language)]"
+            app.buttons[config.tabDecoder].tap()
+            XCTAssertTrue(app.buttons[config.btnStartRecording].waitForExistence(timeout: 2), "\(tag) Start recording button missing")
+            XCTAssertTrue(app.buttons[config.btnImportAudio].exists, "\(tag) Import audio button missing")
+            app.terminate()
+        }
     }
 
     // MARK: - Settings Sheet
 
     @MainActor
     func testSettingsSlidersAreAccessible() {
-        app.buttons["Settings"].tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.sliders["Tone Frequency"].exists)
-        XCTAssertTrue(app.sliders["Speed"].exists)
-        XCTAssertTrue(app.sliders["Volume"].exists)
+        for config in Self.supportedLocales {
+            launch(with: config)
+            let tag = "[\(config.language)]"
+            app.buttons[config.btnSettings].tap()
+            XCTAssertTrue(app.navigationBars[config.navSettings].waitForExistence(timeout: 2), "\(tag) Settings nav bar missing")
+            XCTAssertTrue(app.sliders[config.sliderToneFrequency].exists, "\(tag) Tone Frequency slider missing")
+            XCTAssertTrue(app.sliders[config.sliderSpeed].exists, "\(tag) Speed slider missing")
+            XCTAssertTrue(app.sliders[config.sliderVolume].exists, "\(tag) Volume slider missing")
+            app.terminate()
+        }
     }
 
     @MainActor
     func testSettingsSliderDefaultValues() {
-        app.buttons["Settings"].tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
-        XCTAssertEqual(app.sliders["Tone Frequency"].value as? String, "700 hertz")
-        XCTAssertEqual(app.sliders["Speed"].value as? String, "12 words per minute")
-        XCTAssertEqual(app.sliders["Volume"].value as? String, "80 percent")
+        for config in Self.supportedLocales {
+            launch(with: config)
+            let tag = "[\(config.language)]"
+            app.buttons[config.btnSettings].tap()
+            XCTAssertTrue(app.navigationBars[config.navSettings].waitForExistence(timeout: 2), "\(tag) Settings nav bar missing")
+            XCTAssertEqual(app.sliders[config.sliderToneFrequency].value as? String, config.sliderValueFrequency, "\(tag) Frequency default wrong")
+            XCTAssertEqual(app.sliders[config.sliderSpeed].value as? String, config.sliderValueSpeed, "\(tag) Speed default wrong")
+            XCTAssertEqual(app.sliders[config.sliderVolume].value as? String, config.sliderValueVolume, "\(tag) Volume default wrong")
+            app.terminate()
+        }
     }
 
     // MARK: - Performance
