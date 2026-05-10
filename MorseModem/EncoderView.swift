@@ -8,6 +8,7 @@ import SwiftData
 
 struct EncoderView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \AppSettings.toneFrequency) private var settingsArray: [AppSettings]
 
     @State private var viewModel: EncoderViewModel?
@@ -70,9 +71,11 @@ struct EncoderView: View {
                                 Text(morse)
                                     .font(.system(.title2, design: .monospaced))
                                     .padding()
+                                    .accessibilityHidden(true)
                             }
                             .background(Color(.tertiarySystemBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .accessibilityHidden(true)
                         }
                         .padding()
                         .background(Color(.secondarySystemBackground))
@@ -103,6 +106,7 @@ struct EncoderView: View {
                         }
                         .disabled(viewModel?.morseCode.isEmpty ?? true)
                         .accessibilityLabel(viewModel?.toneGenerator.isPlaying == true ? "Stop playing" : "Play morse code")
+                        .accessibilityHint(viewModel?.toneGenerator.isPlaying == true ? "Stops the audio playback" : "Plays the encoded Morse code as audio")
 
                         // Export Button
                         Button {
@@ -130,6 +134,7 @@ struct EncoderView: View {
                         }
                         .disabled(viewModel?.morseCode.isEmpty ?? true || viewModel?.isExporting == true)
                         .accessibilityLabel("Export audio file")
+                        .accessibilityHint("Exports the Morse code as an audio file to share")
 
                         // Clear Button
                         Button {
@@ -146,6 +151,7 @@ struct EncoderView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                         .disabled(viewModel?.inputText.isEmpty ?? true)
+                        .accessibilityHint("Clears the input text and Morse code")
                     }
                     .padding()
 
@@ -167,6 +173,8 @@ struct EncoderView: View {
                     .padding()
                     .background(Color(.secondarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(String(localized: "Current Settings")): \(Int(settings.toneFrequency)) Hz, \(settings.wordsPerMinute) WPM, \(Int(settings.volume * 100))%")
                 }
                 .padding()
             }
@@ -178,6 +186,7 @@ struct EncoderView: View {
                     } label: {
                         Image(systemName: "gearshape")
                     }
+                    .accessibilityLabel("Settings")
                 }
             }
             .sheet(isPresented: $showSettings) {
@@ -197,6 +206,11 @@ struct EncoderView: View {
         .onAppear {
             if viewModel == nil {
                 viewModel = EncoderViewModel(modelContext: modelContext)
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background {
+                viewModel?.stopPlaying()
             }
         }
     }

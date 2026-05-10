@@ -5,6 +5,7 @@
 
 import SwiftUI
 import SwiftData
+import Accessibility
 
 @MainActor
 @Observable
@@ -41,6 +42,8 @@ class DecoderViewModel {
                     self.recordingDuration = Date().timeIntervalSince(startTime)
                 }
             }
+
+            AccessibilityNotification.Announcement(String(localized: "Recording started")).post()
         } catch {
             importError = error.localizedDescription
             showPermissionAlert = true
@@ -59,6 +62,12 @@ class DecoderViewModel {
         decodedMorse = morseDecoder.decodedMorse
 
         saveMessage()
+
+        if decodedText.isEmpty {
+            AccessibilityNotification.Announcement(String(localized: "Recording stopped. No Morse code detected.")).post()
+        } else {
+            AccessibilityNotification.Announcement(String(localized: "Recording stopped. Decoded text is ready.")).post()
+        }
     }
 
     /// Import audio file
@@ -101,12 +110,16 @@ class DecoderViewModel {
 
             if !decodedText.isEmpty {
                 saveMessage()
+                AccessibilityNotification.Announcement(String(localized: "Import complete. Decoded text is ready.")).post()
+            } else {
+                AccessibilityNotification.Announcement(String(localized: "Import complete. No Morse code detected.")).post()
             }
 
             isImporting = false
         } catch {
             importError = String(localized: "Failed to import audio file: \(error.localizedDescription)")
             isImporting = false
+            AccessibilityNotification.Announcement(String(localized: "Import failed.")).post()
         }
     }
 

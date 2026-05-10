@@ -6,6 +6,8 @@
 import SwiftUI
 
 struct AboutView: View {
+    @ScaledMetric private var iconSize: CGFloat = 60
+
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     }
@@ -19,7 +21,7 @@ struct AboutView: View {
             Section {
                 VStack(spacing: 12) {
                     Image(systemName: "waveform.circle.fill")
-                        .font(.system(size: 60))
+                        .font(.system(size: iconSize))
                         .foregroundStyle(.tint)
 
                     Text("MorseModem")

@@ -56,12 +56,14 @@ struct HistoryView: View {
                                 .lineLimit(1)
                         }
                         .padding(.vertical, 4)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("\(message.isEncoded ? "Encoded" : "Decoded") message: \(message.text), \(message.timestamp.formatted(date: .abbreviated, time: .shortened))")
                     }
                 }
                 .onDelete(perform: deleteMessages)
             }
             .navigationTitle("History")
-            .searchable(text: $searchText, prompt: "Search messages")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search messages")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     EditButton()

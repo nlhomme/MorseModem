@@ -24,6 +24,15 @@ struct SettingsView: View {
                         }
                         
                         Slider(value: $settings.toneFrequency, in: 300...1500, step: 50)
+                            .accessibilityLabel("Tone Frequency")
+                            .accessibilityValue("\(Int(settings.toneFrequency)) hertz")
+                            .accessibilityAdjustableAction { direction in
+                                switch direction {
+                                case .increment: settings.toneFrequency = min(settings.toneFrequency + 50, 1500)
+                                case .decrement: settings.toneFrequency = max(settings.toneFrequency - 50, 300)
+                                @unknown default: break
+                                }
+                            }
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
@@ -38,6 +47,15 @@ struct SettingsView: View {
                             get: { Double(settings.wordsPerMinute) },
                             set: { settings.wordsPerMinute = Int($0) }
                         ), in: 5...40, step: 1)
+                            .accessibilityLabel("Speed")
+                            .accessibilityValue("\(settings.wordsPerMinute) words per minute")
+                            .accessibilityAdjustableAction { direction in
+                                switch direction {
+                                case .increment: settings.wordsPerMinute = min(settings.wordsPerMinute + 1, 40)
+                                case .decrement: settings.wordsPerMinute = max(settings.wordsPerMinute - 1, 5)
+                                @unknown default: break
+                                }
+                            }
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
@@ -49,6 +67,15 @@ struct SettingsView: View {
                         }
                         
                         Slider(value: $settings.volume, in: 0...1, step: 0.05)
+                            .accessibilityLabel("Volume")
+                            .accessibilityValue("\(Int(settings.volume * 100)) percent")
+                            .accessibilityAdjustableAction { direction in
+                                switch direction {
+                                case .increment: settings.volume = min(settings.volume + 0.05, 1.0)
+                                case .decrement: settings.volume = max(settings.volume - 0.05, 0.0)
+                                @unknown default: break
+                                }
+                            }
                     }
                 } header: {
                     Text("Audio Settings")

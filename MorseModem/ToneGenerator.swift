@@ -14,12 +14,26 @@ class ToneGenerator {
     private var audioEngine: AVAudioEngine?
     private var playerNode: AVAudioPlayerNode?
     private var hapticEngine: CHHapticEngine?
+    private var hapticPlayer: CHHapticPatternPlayer?
+    private var hapticEngineNeedsRestart = false
 
     private let sampleRate: Double = 44100.0
     private let fadeInOutDuration: Double = 0.005
 
     init() {
         setupHaptics()
+    }
+    
+    /// Restart the haptic engine if it was stopped (e.g., app resumed from background)
+    func restartHapticsIfNeeded() {
+        guard hapticEngineNeedsRestart else { return }
+        
+        do {
+            try hapticEngine?.start()
+            hapticEngineNeedsRestart = false
+        } catch {
+            print("Failed to restart haptic engine: \(error)")
+        }
     }
 
     private func configureAudioSessionForPlayback() {
@@ -37,6 +51,26 @@ class ToneGenerator {
 
         do {
             hapticEngine = try CHHapticEngine()
+            
+            // Handle engine stoppage due to external causes (app backgrounded, audio interruption, etc.)
+            hapticEngine?.stoppedHandler = { [weak self] reason in
+                Task { @MainActor in
+                    self?.hapticEngineNeedsRestart = true
+                }
+            }
+            
+            // Handle engine reset after server recovery
+            hapticEngine?.resetHandler = { [weak self] in
+                Task { @MainActor in
+                    do {
+                        try self?.hapticEngine?.start()
+                        self?.hapticEngineNeedsRestart = false
+                    } catch {
+                        print("Failed to restart haptic engine after reset: \(error)")
+                    }
+                }
+            }
+            
             try hapticEngine?.start()
         } catch {
             print("Failed to setup haptics: \(error)")
@@ -154,7 +188,8 @@ class ToneGenerator {
         do {
             try engine.start()
 
-            async let hapticTask: Void = playHapticPattern(morse: morse, settings: settings)
+            // Schedule haptic events (returns immediately after scheduling, before playback ends)
+            await playHapticPattern(morse: morse, settings: settings)
 
             await withCheckedContinuation { continuation in
                 player.scheduleBuffer(buffer) {
@@ -162,8 +197,6 @@ class ToneGenerator {
                 }
                 player.play()
             }
-
-            await hapticTask
 
             cleanupAudioEngine()
         } catch {
@@ -185,11 +218,19 @@ class ToneGenerator {
         audioEngine?.stop()
         audioEngine = nil
         playerNode = nil
+        
+        // Stop haptic feedback
+        try? hapticPlayer?.stop(atTime: CHHapticTimeImmediate)
+        hapticPlayer = nil
+        
         isPlaying = false
     }
 
     /// Play haptic pattern for Morse code
     private func playHapticPattern(morse: String, settings: AppSettings) async {
+        // Restart haptic engine if it was stopped (e.g., app was backgrounded)
+        restartHapticsIfNeeded()
+        
         guard let hapticEngine else { return }
 
         var events: [CHHapticEvent] = []
@@ -234,6 +275,7 @@ class ToneGenerator {
         do {
             let pattern = try CHHapticPattern(events: events, parameters: [])
             let player = try hapticEngine.makePlayer(with: pattern)
+            hapticPlayer = player
             try player.start(atTime: CHHapticTimeImmediate)
         } catch {
             print("Failed to play haptic pattern: \(error)")

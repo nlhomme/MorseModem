@@ -9,6 +9,10 @@ import UniformTypeIdentifiers
 
 struct DecoderView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @ScaledMetric private var placeholderIconSize: CGFloat = 60
     @Binding var sharedAudioURL: URL?
 
     @State private var viewModel: DecoderViewModel?
@@ -113,6 +117,13 @@ struct DecoderView: View {
                 }
             }
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background {
+                if viewModel?.isRecording == true {
+                    viewModel?.stopRecording()
+                }
+            }
+        }
     }
 
     // MARK: - Sub-views
@@ -138,12 +149,13 @@ struct DecoderView: View {
                         .stroke(Color.red.opacity(0.3), lineWidth: 4)
                         .frame(width: 24, height: 24)
                         .scaleEffect(viewModel?.isRecording == true ? 1.5 : 1.0)
-                        .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: viewModel?.isRecording)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: viewModel?.isRecording)
 
                     Circle()
                         .fill(Color.red)
                         .frame(width: 16, height: 16)
                 }
+                .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("RECORDING")
@@ -152,7 +164,7 @@ struct DecoderView: View {
 
                     Text("Speak or play Morse code near your device")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                 }
 
                 Spacer()
@@ -180,6 +192,7 @@ struct DecoderView: View {
 
                 WaveformView(data: waveform)
                     .frame(height: 80)
+                    .accessibilityHidden(true)
             }
             .padding()
             .background(Color(.secondarySystemBackground))
@@ -250,6 +263,7 @@ struct DecoderView: View {
             }
         }
         .accessibilityLabel(viewModel?.isRecording == true ? "Stop recording" : "Start recording")
+        .accessibilityHint(viewModel?.isRecording == true ? "Stops the current audio capture" : "Starts capturing audio to decode Morse code")
         .disabled(viewModel?.isImporting == true)
     }
 
@@ -266,6 +280,7 @@ struct DecoderView: View {
                 .frame(height: 1)
         }
         .padding(.vertical, 8)
+        .accessibilityHidden(true)
     }
 
     private var importButton: some View {
@@ -292,6 +307,7 @@ struct DecoderView: View {
         .disabled(viewModel?.isImporting == true || viewModel?.isRecording == true)
         .opacity((viewModel?.isImporting == true || viewModel?.isRecording == true) ? 0.5 : 1.0)
         .accessibilityLabel("Import audio file")
+        .accessibilityHint("Opens a file picker to select an audio file for Morse code decoding")
     }
 
     @ViewBuilder
@@ -305,9 +321,11 @@ struct DecoderView: View {
                     Text(morse)
                         .font(.system(.title3, design: .monospaced))
                         .padding()
+                        .accessibilityHidden(true)
                 }
                 .background(Color(.tertiarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .accessibilityHidden(true)
             }
             .padding()
             .background(Color(.secondarySystemBackground))
@@ -333,6 +351,8 @@ struct DecoderView: View {
                             .font(.caption)
                     }
                     .buttonStyle(.bordered)
+                    .accessibilityLabel("Copy decoded text")
+                    .accessibilityHint("Copies the decoded text to clipboard")
                 }
 
                 Text(text)
@@ -360,6 +380,7 @@ struct DecoderView: View {
                 .foregroundColor(.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
+            .accessibilityHint("Clears the decoded Morse code and text")
             .padding(.horizontal)
         }
     }
@@ -367,7 +388,7 @@ struct DecoderView: View {
     private var instructionsPlaceholder: some View {
         VStack(spacing: 12) {
             Image(systemName: "waveform.circle")
-                .font(.system(size: 60))
+                .font(.system(size: placeholderIconSize))
                 .foregroundStyle(.secondary)
 
             Text("Decode Morse Code")

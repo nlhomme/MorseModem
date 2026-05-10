@@ -43,19 +43,23 @@ struct ReferenceView: View {
         NavigationStack {
             List {
                 ForEach(filteredCharacters, id: \.category) { section in
-                    Section(section.category) {
+                    Section(LocalizedStringKey(section.category)) {
                         ForEach(section.characters, id: \.char) { item in
                             HStack {
-                                Text(String(item.char))
-                                    .font(.title2)
-                                    .frame(width: 40)
-                                
-                                Text(item.morse)
-                                    .font(.system(.title3, design: .monospaced))
-                                    .foregroundStyle(.secondary)
-                                
+                                HStack {
+                                    Text(String(item.char))
+                                        .font(.title2)
+                                        .frame(width: 40)
+
+                                    Text(item.morse)
+                                        .font(.system(.title3, design: .monospaced))
+                                        .foregroundStyle(.secondary)
+                                }
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel("\(String(item.char)), \(String(localized: "Morse Code")): \(item.morse)")
+
                                 Spacer()
-                                
+
                                 Button {
                                     playCharacter(item.char, morse: item.morse)
                                 } label: {
@@ -65,6 +69,9 @@ struct ReferenceView: View {
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("Play morse code for \(String(item.char))")
+                                .accessibilityHint(playingCharacter == item.char ?
+                                    String(localized: "Stops the audio playback") :
+                                    String(localized: "Plays the encoded Morse code as audio"))
                             }
                             .padding(.vertical, 4)
                         }
@@ -72,7 +79,7 @@ struct ReferenceView: View {
                 }
             }
             .navigationTitle("Morse Reference")
-            .searchable(text: $searchText, prompt: "Search characters")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search characters")
             .overlay {
                 if filteredCharacters.isEmpty {
                     ContentUnavailableView.search(text: searchText)
