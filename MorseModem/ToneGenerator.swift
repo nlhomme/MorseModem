@@ -188,7 +188,8 @@ class ToneGenerator {
         do {
             try engine.start()
 
-            async let hapticTask: Void = playHapticPattern(morse: morse, settings: settings)
+            // Schedule haptic events (returns immediately after scheduling, before playback ends)
+            await playHapticPattern(morse: morse, settings: settings)
 
             await withCheckedContinuation { continuation in
                 player.scheduleBuffer(buffer) {
@@ -196,8 +197,6 @@ class ToneGenerator {
                 }
                 player.play()
             }
-
-            await hapticTask
 
             cleanupAudioEngine()
         } catch {

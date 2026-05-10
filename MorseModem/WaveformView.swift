@@ -26,6 +26,8 @@ struct WaveformView: View {
             }
 
             context.fill(path, with: .color(.accentColor))
+            context.stroke(path, with: .color(.primary.opacity(0.3)), lineWidth: 0.5)
         }
+        .accessibilityHidden(true)
     }
 }

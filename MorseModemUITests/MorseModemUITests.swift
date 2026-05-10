@@ -2,38 +2,83 @@
 //  MorseModemUITests.swift
 //  MorseModemUITests
 //
-//  Created by Nicolas Lhomme on 26/01/2026.
-//
 
 import XCTest
 
 final class MorseModemUITests: XCTestCase {
 
+    var app: XCUIApplication!
+
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        app = XCUIApplication()
+        app.launch()
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    // MARK: - Tab Bar
+
+    @MainActor
+    func testTabBarAccessibilityLabels() {
+        XCTAssertTrue(app.tabBars.buttons["Encoder"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Decoder"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Reference"].exists)
+        XCTAssertTrue(app.tabBars.buttons["History"].exists)
+    }
+
+    // MARK: - Encoder Tab
+
+    @MainActor
+    func testEncoderInteractiveElementsAreAccessible() {
+        XCTAssertTrue(app.buttons["Settings"].exists)
+        XCTAssertTrue(app.buttons["Play morse code"].exists)
+        XCTAssertTrue(app.buttons["Export audio file"].exists)
+        XCTAssertTrue(app.buttons["Clear"].exists)
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
-        app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testEncoderMorseCodeHiddenFromAccessibilityTree() {
+        // SwiftUI TextField with axis:.vertical renders as UITextView
+        let textInput = app.textViews.firstMatch
+        XCTAssertTrue(textInput.waitForExistence(timeout: 2))
+        textInput.tap()
+        textInput.typeText("SOS")
+        // "SOS" encodes to "... --- ..." — must not be reachable via the accessibility tree
+        XCTAssertFalse(app.staticTexts["... --- ..."].exists)
     }
+
+    // MARK: - Decoder Tab
+
+    @MainActor
+    func testDecoderInteractiveElementsAreAccessible() {
+        app.tabBars.buttons["Decoder"].tap()
+        XCTAssertTrue(app.buttons["Start recording"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Import audio file"].exists)
+    }
+
+    // MARK: - Settings Sheet
+
+    @MainActor
+    func testSettingsSlidersAreAccessible() {
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.sliders["Tone Frequency"].exists)
+        XCTAssertTrue(app.sliders["Speed"].exists)
+        XCTAssertTrue(app.sliders["Volume"].exists)
+    }
+
+    @MainActor
+    func testSettingsSliderDefaultValues() {
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
+        XCTAssertEqual(app.sliders["Tone Frequency"].value as? String, "700 hertz")
+        XCTAssertEqual(app.sliders["Speed"].value as? String, "12 words per minute")
+        XCTAssertEqual(app.sliders["Volume"].value as? String, "80 percent")
+    }
+
+    // MARK: - Performance
 
     @MainActor
     func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             XCUIApplication().launch()
         }

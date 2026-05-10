@@ -53,6 +53,8 @@ struct MessageDetailView: View {
                                 .font(.caption)
                         }
                         .buttonStyle(.bordered)
+                        .accessibilityLabel("Copy text")
+                        .accessibilityHint("Copies the decoded text to clipboard")
                     }
 
                     Text(message.text)
@@ -83,6 +85,8 @@ struct MessageDetailView: View {
                                 .font(.caption)
                         }
                         .buttonStyle(.bordered)
+                        .accessibilityLabel("Copy Morse code")
+                        .accessibilityHint("Copies the Morse code to clipboard")
                     }
 
                     ScrollView(.horizontal, showsIndicators: false) {
